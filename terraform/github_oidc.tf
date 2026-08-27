@@ -1,17 +1,14 @@
 # GitHub Actions OIDC: keyless deploy access for this repo's pipeline.
 
-variable "github_repo" {
-  description = "GitHub repository allowed to assume the deploy role (owner/name)."
-  type        = string
-  default     = "parihar-yogesh/cloudresume-aws"
-}
-
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
 }
 
-# Trust is limited to the main branch of this repository; tokens are short-lived.
+# Trust is limited to the main branch of this repository. The subject uses
+# GitHub's immutable numeric IDs for the account and repository, which never
+# change even if either is renamed, so matching them exactly is both stable
+# and more secure than matching the plain names.
 resource "aws_iam_role" "github_actions_deploy" {
   name = "cloudresume-github-actions-deploy"
 
@@ -25,7 +22,7 @@ resource "aws_iam_role" "github_actions_deploy" {
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/main"
+            "token.actions.githubusercontent.com:sub" = "repo:parihar-yogesh@83363257/cloudresume-aws@1338853392:ref:refs/heads/main"
           }
         }
       }
